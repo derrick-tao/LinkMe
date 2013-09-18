@@ -15,7 +15,7 @@ var forms = require('forms'),
 var SHORT_KEY = 'short';
 var LONG_KEY = 'long';
 var HOSTNAME = 'localhost';
-var PORT = 8080;
+var PORT = 1337;
 
 http.createServer(function (req, res) {
     switch(req.method) {
@@ -67,8 +67,6 @@ function handlePOST(req, res) {
         var shortKey = params.short;
         if (shortKey == undefined || shortKey == '') return sendErrorResponse(res, "Shorten URL cannot be blank");
         db.links.findOne(buildSearchParams(shortKey), function(err, link) {
-            debug("err", err);
-            debug("link", link);
             if (!err && link && link[LONG_KEY]) {
                 console.log("send error");
                 sendErrorResponse(res, "Custom url <b>" + getFullPath(shortKey) + "</b> already exists.");
@@ -89,8 +87,6 @@ function handlePOST(req, res) {
             }
         });
     })
-    // debug('long', req.body.long);
-    // debug('short', req.body.short);
 }
 
 function handleValidPaths(req, res) {

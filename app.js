@@ -14,6 +14,8 @@ var forms = require('forms'),
 // GLOBAL DB KEYS
 var SHORT_KEY = 'short';
 var LONG_KEY = 'long';
+var HOSTNAME = 'localhost';
+var PORT = 8080;
 
 http.createServer(function (req, res) {
     switch(req.method) {
@@ -22,7 +24,7 @@ http.createServer(function (req, res) {
         default:
         sendErrorResponse(res);
     }
-}).listen(8080, '127.0.0.1');
+}).listen(PORT, HOSTNAME);
 console.log('Server running at http://127.0.0.1:8080/');
 
 function handleGET(req, res) {
@@ -63,12 +65,13 @@ function handlePOST(req, res) {
         var params = querystring.parse(body);
         var longUrl = params.long;
         var shortKey = params.short;
+        if (shortKey == undefined || shortKey == '') return sendErrorResponse(res, "Shorten URL cannot be blank");
         db.links.findOne(buildSearchParams(shortKey), function(err, link) {
             debug("err", err);
             debug("link", link);
             if (!err && link && link[LONG_KEY]) {
                 console.log("send error");
-                sendErrorResponse(res, "Custom url /\"" + shortKey + "\" already exists.");
+                sendErrorResponse(res, "Custom url <b>" + getFullPath(shortKey) + "</b> already exists.");
             } else {
                 console.log("short url not taken: " + shortKey);
                 db.links.save(params, function(err, saved) {
@@ -78,7 +81,8 @@ function handlePOST(req, res) {
                     } else {
                         res.writeHead(200, {'Content-Type': 'text/html'});
                         res.write('<h1>Shorten URL Created!</h1>');
-                        res.write('<b>/' + shortKey + '</b> now takes you to <b>' + longUrl + '</b>');
+                        res.write('<b>' + getFullPath(shortKey) + '</b> now takes you to <b>' + longUrl + '</b></br>');
+                        res.write('Try now: ' + '<a href="' + getFullPath(shortKey) + '">'+ getFullPath(shortKey) + "</a>");
                         res.end();
                     }
                 });
@@ -99,14 +103,16 @@ function handleValidPaths(req, res) {
     console.log('ShortKey: ' + shortKey);
 
     db.links.findOne(buildSearchParams(shortKey), function(err, link) {
-        debug("err", err);
-        debug("link", link);
         if (!err && link && link[LONG_KEY]) {
-            console.log("FORWARD: " + link[LONG_KEY]);
-            send302Response(res, link[LONG_KEY]);
+            var longUrl = link[LONG_KEY];
+            if (url.parse(longUrl).protocol == undefined) {
+                longUrl = "http://".concat(longUrl);
+            }
+            console.log("FORWARD: " + longUrl);
+            send302Response(res, longUrl);
         } else {
             console.log("send error");
-            sendErrorResponse(res, "No url associated with /\"" + shortKey + "\"");
+            sendErrorResponse(res, "No url associated with <b>" + getFullPath(shortKey) + "</b>");
         }
     });
 }
@@ -135,17 +141,13 @@ function send302Response(res, forwardUrl) {
 }
 
 function sendErrorResponse(res, msg) {
-    res.writeHead(400,  {'Content-Type': 'text/plain'});
+    res.writeHead(400,  {'Content-Type': 'text/html'});
     if (msg)
         res.end('Error: ' + msg);
     else
         res.end('Error');
 }
 
-function debug(name, value) {
-    if (value != null && value != undefined) {
-        console.log(name + ": " + value);
-    } else {
-        console.log(name + ": undefined");
-    }
+function getFullPath(shortKey) {
+    return "http://" + HOSTNAME + ":" + PORT + "/" + shortKey; 
 }

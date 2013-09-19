@@ -19,8 +19,8 @@ var random = require("randomstring");
 // GLOBAL DB KEYS
 var SHORT_KEY = 'short';
 var LONG_KEY = 'long';
-var HOSTNAME = 'localhost';
-var PORT = 1337;
+var HOSTNAME = process.env.HOSTNAME || 'localhost';
+var PORT = process.env.PORT || 1337;
 
 http.createServer(function (req, res) {
     switch(req.method) {

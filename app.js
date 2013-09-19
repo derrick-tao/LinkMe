@@ -29,7 +29,7 @@ http.createServer(function (req, res) {
         default:
         sendErrorResponse(res);
     }
-}).listen(PORT, HOSTNAME);
+}).listen(PORT);
 console.log('Server running at http://' + HOSTNAME + ':' + PORT + "/");
 
 function handleGET(req, res) {

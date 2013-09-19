@@ -25,13 +25,13 @@ http.createServer(function (req, res) {
         sendErrorResponse(res);
     }
 }).listen(PORT, HOSTNAME);
-console.log('Server running at http://127.0.0.1:8080/');
+console.log('Server running at http://' + HOSTNAME + ':' + PORT + "/");
 
 function handleGET(req, res) {
     switch(req.url) {
         case '/': index(req, res); break;
         default: {
-            if (validPath(req.url)) {
+            if (isValidPath(req.url)) {
                 handleValidPaths(req, res);
             } else {
                 sendErrorResponse(res);
@@ -61,14 +61,13 @@ function handlePOST(req, res) {
         body += data;
     });
     req.on('end', function() {
-        console.log(util.inspect(querystring.parse(body)));
         var params = querystring.parse(body);
         var longUrl = params.long;
         var shortKey = params.short;
-        if (shortKey == undefined || shortKey == '') return sendErrorResponse(res, "Shorten URL cannot be blank");
+        if (shortKey == undefined || shortKey == '' || !isValidPath("/" + shortKey)) return sendErrorResponse(res, "Invalid shorten URL: " + shortKey);
         db.links.findOne(buildSearchParams(shortKey), function(err, link) {
             if (!err && link && link[LONG_KEY]) {
-                console.log("send error");
+                console.log("custom url already exists: " + getFullPath(shortKey));
                 sendErrorResponse(res, "Custom url <b>" + getFullPath(shortKey) + "</b> already exists.");
             } else {
                 console.log("short url not taken: " + shortKey);
@@ -113,14 +112,13 @@ function handleValidPaths(req, res) {
     });
 }
 
-function validPath(pathName) {
+function isValidPath(pathName) {
     var regex = /^\/\w+$/;
     return regex.test(pathName);
 }
 
 function getShortKey(pathUrl) {
     var parsedUrl = url.parse(pathUrl);
-    console.log(parsedUrl);
     return parsedUrl.pathname.substring(1);
 }
 

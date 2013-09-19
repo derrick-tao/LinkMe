@@ -1,16 +1,20 @@
 'use strict';
 
-var databaseUrl = "mydb";
-var collections = ["links"];
-var db = require("mongojs").connect(databaseUrl, collections);
 var http = require('http');
 var util = require('util');
 var url = require('url');
-var random = require("randomstring");
-var querystring=require('querystring');
+var querystring = require('querystring');
+var os = require('os');
+
+// Third-Party
+var databaseUrl = "mydb",
+    collections = ["links"],
+    db = require("mongojs").connect(databaseUrl, collections);
 var forms = require('forms'),
     fields = forms.fields,
     validators = forms.validators;
+var random = require("randomstring");
+
 
 // GLOBAL DB KEYS
 var SHORT_KEY = 'short';

@@ -3,7 +3,8 @@
     "version": "0.0.1",
     "dependencies": {
         "forms": "0.3.0",
-        "mongojs": "0.9.4"
+        "mongojs": "0.9.4",
+        "randomstring": "1.0.2",
     },
     "engines": {
         "node": "0.10.x",

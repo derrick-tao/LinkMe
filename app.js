@@ -33,13 +33,15 @@ http.createServer(function (req, res) {
 console.log('Server running at http://' + HOSTNAME + ':' + PORT + "/");
 
 function handleGET(req, res) {
+    console.log("Received GET req: " + req.url);
     switch(req.url) {
         case '/': index(req, res); break;
+        case '/favicon.ico': break;
         default: {
             if (isValidPath(req.url)) {
                 handleValidPaths(req, res);
             } else {
-                sendErrorResponse(res);
+                sendErrorResponse(res, "Invalid short url");
             }
         }
     }
@@ -185,13 +187,13 @@ function send302Response(res, forwardUrl) {
 }
 
 function sendErrorResponse(res, msg) {
-    console.log("send error: " + msg);
     res.writeHead(400,  {'Content-Type': 'text/html'});
     if (msg)
         msg = 'Error: ' + msg;
     else
         msg = 'Error';
     res.write(msg + "</br>");
+    console.log("send error: " + msg);
     res.end("<a href='" + getFullPath() + "'>Go to Home Page</a>");
 }
 

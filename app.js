@@ -7,7 +7,7 @@ var querystring = require('querystring');
 var os = require('os');
 
 // Third-Party
-var databaseUrl = "mydb",
+var databaseUrl = process.env.MONGOLAB_URI || "mydb",
     collections = ["links"],
     db = require("mongojs").connect(databaseUrl, collections);
 var forms = require('forms'),
@@ -19,7 +19,7 @@ var random = require("randomstring");
 // GLOBAL DB KEYS
 var SHORT_KEY = 'short';
 var LONG_KEY = 'long';
-var HOSTNAME = process.env.HOSTNAME || 'localhost';
+var HOSTNAME = process.env.HOSTNAME || 'http://localhost';
 var PORT = process.env.PORT || 1337;
 
 http.createServer(function (req, res) {
@@ -204,5 +204,12 @@ function addHttpToUrlIfMissingProtocol(longUrl) {
 
 function getFullPath(shortKey) {
     if (shortKey == undefined) shortKey = '';
-    return "http://" + HOSTNAME + ":" + PORT + "/" + shortKey; 
+    if (isProduction()) {
+        return HOSTNAME + "/" + shortKey;
+    }
+    return HOSTNAME + ":" + PORT + "/" + shortKey; 
+}
+
+function isProduction() {
+    return process.env.NODE_ENV == 'production';
 }

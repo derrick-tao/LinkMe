@@ -14,6 +14,8 @@ var forms = require('forms'),
     fields = forms.fields,
     validators = forms.validators;
 var random = require("randomstring");
+var express = require('express'),
+    app = express();
 
 
 // GLOBAL DB KEYS
@@ -22,28 +24,21 @@ var LONG_KEY = 'long';
 var HOSTNAME = process.env.HOSTNAME || 'http://localhost';
 var PORT = process.env.PORT || 1337;
 
-http.createServer(function (req, res) {
-    switch(req.method) {
-        case 'GET': handleGET(req, res); break;
-        case 'POST': handlePOST(req, res); break;
-        default:
-        sendErrorResponse(res);
-    }
-}).listen(PORT);
+app.listen(PORT);
 console.log('Server running at http://' + HOSTNAME + ':' + PORT + "/");
+
+app.get('/', index);
+app.get('/*', handleGET);
+app.post('/create', handlePOST);
+
+app.use(express.logger());
 
 function handleGET(req, res) {
     console.log("Received GET req: " + req.url);
-    switch(req.url) {
-        case '/': index(req, res); break;
-        case '/favicon.ico': break;
-        default: {
-            if (isValidPath(req.url)) {
-                handleValidPaths(req, res);
-            } else {
-                sendErrorResponse(res, "Invalid short url");
-            }
-        }
+    if (isValidPath(req.url)) {
+        handleValidPaths(req, res);
+    } else {
+        sendErrorResponse(res, "Invalid short url");
     }
 }
 

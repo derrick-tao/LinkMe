@@ -4,7 +4,8 @@
     "dependencies": {
         "forms": "0.3.0",
         "mongojs": "0.9.4",
-        "randomstring": "1.0.2"
+        "randomstring": "1.0.2",
+        "express": "3.x"
     },
     "engines": {
         "node": "0.10.x",

@@ -1,7 +1,6 @@
 'use strict';
 
 var http = require('http');
-var util = require('util');
 var url = require('url');
 var querystring = require('querystring');
 var os = require('os');
@@ -21,8 +20,12 @@ var express = require('express'),
 // GLOBAL DB KEYS
 var SHORT_KEY = 'short';
 var LONG_KEY = 'long';
-var HOSTNAME = process.env.HOSTNAME || 'http://localhost';
-var PORT = process.env.PORT || 1337;
+var HOSTNAME = exports.HOSTNAME = process.env.HOSTNAME || 'http://localhost';
+var PORT = exports.PORT = process.env.PORT || 1337;
+
+var util = {};
+
+module.exports.util = util;
 
 app.listen(PORT);
 console.log('Server running at http://' + HOSTNAME + ':' + PORT + "/");
@@ -35,7 +38,7 @@ app.use(express.logger());
 
 function handleGET(req, res) {
     console.log("Received GET req: " + req.url);
-    if (isValidPath(req.url)) {
+    if (util.isValidPath(req.url)) {
         handleValidPaths(req, res);
     } else {
         sendErrorResponse(res, "Invalid short url");
@@ -78,7 +81,7 @@ function handlePOST(req, res) {
             case '': return handleBlankShortKey(res, params);
 
             default: {
-                if (!isValidPath("/" + shortKey)) 
+                if (!util.isValidPath("/" + shortKey)) 
                     return sendErrorResponse(res, "Invalid shorten URL: " + shortKey);
                 return handleShortKeyLookup(res, params);
             }
@@ -89,10 +92,10 @@ function handlePOST(req, res) {
 function handleBlankShortKey(res, params) {
     delete(params.short);
     params.generated = true;
-    params.long = addHttpToUrlIfMissingProtocol(params.long);
+    params.long = util.addHttpToUrlIfMissingProtocol(params.long);
     db.links.findOne(params, function(err, link) {
         if (!err && link && link[LONG_KEY]) {
-            console.log("random generated custom url already exists so reusing: " + getFullPath(link.short));
+            console.log("random generated custom url already exists so reusing: " + util.getFullPath(link.short));
             params.short = link.short;
             return renderShortenUrlCreated(res, params);
         } else {
@@ -109,7 +112,7 @@ function handleShortKeyLookup(res, params) {
     var shortKey = params.short;
     db.links.findOne(buildSearchParams(shortKey), function(err, link) {
         if (!err && link && link[LONG_KEY]) {
-            return sendErrorResponse(res, "Custom url <b>" + getFullPath(shortKey) + "</b> already exists.");
+            return sendErrorResponse(res, "Custom url <b>" + util.getFullPath(shortKey) + "</b> already exists.");
         } else {
             return createNewShortUrl(res, params);
         }
@@ -119,7 +122,7 @@ function handleShortKeyLookup(res, params) {
 function createNewShortUrl(res, params) {
     var shortKey = params.short;
     console.log("short url not taken: " + shortKey);
-    params.long = addHttpToUrlIfMissingProtocol(params.long);
+    params.long = util.addHttpToUrlIfMissingProtocol(params.long);
     db.links.save(params, function(err, saved) {
         if( err || !saved ) {
             sendErrorResponse(res, "Error has occured. Please try again.");
@@ -134,8 +137,8 @@ function renderShortenUrlCreated(res, params) {
     var shortKey = params.short;
     res.writeHead(200, {'Content-Type': 'text/html'});
     res.write('<h1>Shorten URL Created!</h1>');
-    res.write('<b>' + getFullPath(shortKey) + '</b> now takes you to <b>' + longUrl + '</b></br>');
-    res.write('Try now: ' + '<a href="' + getFullPath(shortKey) + '">'+ getFullPath(shortKey) + "</a>");
+    res.write('<b>' + util.getFullPath(shortKey) + '</b> now takes you to <b>' + longUrl + '</b></br>');
+    res.write('Try now: ' + '<a href="' + util.getFullPath(shortKey) + '">'+ util.getFullPath(shortKey) + "</a>");
     return res.end();
 }
 
@@ -150,15 +153,15 @@ function handleValidPaths(req, res) {
 
     db.links.findOne(buildSearchParams(shortKey), function(err, link) {
         if (!err && link && link[LONG_KEY]) {
-            var longUrl = addHttpToUrlIfMissingProtocol(link[LONG_KEY]);
+            var longUrl = util.addHttpToUrlIfMissingProtocol(link[LONG_KEY]);
             send302Response(res, longUrl);
         } else {
-            sendErrorResponse(res, "No url associated with <b>" + getFullPath(shortKey) + "</b>");
+            sendErrorResponse(res, "No url associated with <b>" + util.getFullPath(shortKey) + "</b>");
         }
     });
 }
 
-function isValidPath(pathName) {
+util.isValidPath = function(pathName) {
     var regex = /^\/\w+$/;
     return regex.test(pathName);
 }
@@ -189,17 +192,18 @@ function sendErrorResponse(res, msg) {
         msg = 'Error';
     res.write(msg + "</br>");
     console.log("send error: " + msg);
-    res.end("<a href='" + getFullPath() + "'>Go to Home Page</a>");
+    res.end("<a href='" + util.getFullPath() + "'>Go to Home Page</a>");
 }
 
-function addHttpToUrlIfMissingProtocol(longUrl) {
+util.addHttpToUrlIfMissingProtocol = function(longUrl) {
+    if (longUrl == undefined || longUrl == '') throw new Error("longUrl can't be undefined or empty");
     if (url.parse(longUrl).protocol == undefined) {
         return "http://".concat(longUrl);
     }
     return longUrl;
 }
 
-function getFullPath(shortKey) {
+util.getFullPath = function(shortKey) {
     if (shortKey == undefined) shortKey = '';
     if (isProduction()) {
         return HOSTNAME + "/" + shortKey;

@@ -1,11 +1,13 @@
 {
-    "name": "linkm3",
-    "version": "0.0.1",
+    "name": "Link-Me",
+    "version": "0.1.0",
     "dependencies": {
         "forms": "0.3.0",
         "mongojs": "0.9.4",
         "randomstring": "1.0.2",
-        "express": "3.x"
+        "express": "3.x",
+        "should": "1.3.0",
+        "mocha": "1.13.0"
     },
     "engines": {
         "node": "0.10.x",

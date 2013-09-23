@@ -8,7 +8,7 @@ var os = require('os');
 // Third-Party
 var databaseUrl = process.env.MONGOLAB_URI || "mydb",
     collections = ["links"],
-    db = require("mongojs").connect(databaseUrl, collections);
+    db;
 var forms = require('forms'),
     fields = forms.fields,
     validators = forms.validators;
@@ -18,8 +18,6 @@ var express = require('express'),
 
 
 // GLOBAL DB KEYS
-var SHORT_KEY = 'short';
-var LONG_KEY = 'long';
 var HOSTNAME = exports.HOSTNAME = process.env.HOSTNAME || 'http://localhost';
 var PORT = exports.PORT = process.env.PORT || 1337;
 
@@ -27,14 +25,24 @@ var util = {};
 
 module.exports.util = util;
 
-app.listen(PORT);
-console.log('Server running at http://' + HOSTNAME + ':' + PORT + "/");
-
 app.get('/', index);
-app.get('/*', handleGET);
+app.get('/favicon.ico', function(req, res) {res.writeHead(200); res.end();});
 app.post('/create', handlePOST);
 
 app.use(express.logger());
+
+startServer();
+
+function startServer() {
+    if(process.env.NODE_ENV == 'testing') {
+        databaseUrl = 'testing_db';
+        app.get('/helloworld', function(req, res) { res.writeHead(200, {'Content-Type': 'text/html'}); res.end('helloworld!') });
+    }
+    db = require("mongojs").connect(databaseUrl, collections);
+    app.get('/*', handleGET);
+    app.listen(PORT);
+    console.log('Server running at http://' + HOSTNAME + ':' + PORT + "/");
+}
 
 function handleGET(req, res) {
     console.log("Received GET req: " + req.url);
@@ -46,6 +54,7 @@ function handleGET(req, res) {
 }
 
 function index(req, res) {
+    console.log('Get Request for Index');
     var create_form = forms.create({
         long: fields.string({required: true, label: 'Enter a long URL to shorten:'}),
         short: fields.string({required: false, label: 'Custom url (optional):'}) 
@@ -94,7 +103,7 @@ function handleBlankShortKey(res, params) {
     params.generated = true;
     params.long = util.addHttpToUrlIfMissingProtocol(params.long);
     db.links.findOne(params, function(err, link) {
-        if (!err && link && link[LONG_KEY]) {
+        if (!err && link && link.long) {
             console.log("random generated custom url already exists so reusing: " + util.getFullPath(link.short));
             params.short = link.short;
             return renderShortenUrlCreated(res, params);
@@ -110,8 +119,8 @@ function handleBlankShortKey(res, params) {
 function handleShortKeyLookup(res, params) {
     var longUrl = params.long;
     var shortKey = params.short;
-    db.links.findOne(buildSearchParams(shortKey), function(err, link) {
-        if (!err && link && link[LONG_KEY]) {
+    db.links.findOne({short: shortKey}, function(err, link) {
+        if (!err && link && link.long) {
             return sendErrorResponse(res, "Custom url <b>" + util.getFullPath(shortKey) + "</b> already exists.");
         } else {
             return createNewShortUrl(res, params);
@@ -148,12 +157,12 @@ function handleValidPaths(req, res) {
     var pathUrl = req.url;
     console.log('Get Pathname: ' + pathUrl);
 
-    var shortKey = getShortKey(pathUrl);
+    var shortKey = util.getShortKey(pathUrl);
     console.log('ShortKey: ' + shortKey);
 
-    db.links.findOne(buildSearchParams(shortKey), function(err, link) {
-        if (!err && link && link[LONG_KEY]) {
-            var longUrl = util.addHttpToUrlIfMissingProtocol(link[LONG_KEY]);
+    db.links.findOne({short: shortKey}, function(err, link) {
+        if (!err && link && link.long) {
+            var longUrl = util.addHttpToUrlIfMissingProtocol(link.long);
             send302Response(res, longUrl);
         } else {
             sendErrorResponse(res, "No url associated with <b>" + util.getFullPath(shortKey) + "</b>");
@@ -166,15 +175,9 @@ util.isValidPath = function(pathName) {
     return regex.test(pathName);
 }
 
-function getShortKey(pathUrl) {
+util.getShortKey = function(pathUrl) {
     var parsedUrl = url.parse(pathUrl);
     return parsedUrl.pathname.substring(1);
-}
-
-function buildSearchParams(shortKey) {
-    var params = {};
-    params[SHORT_KEY] = shortKey;
-    return params;
 }
 
 function send302Response(res, forwardUrl) {
@@ -205,12 +208,12 @@ util.addHttpToUrlIfMissingProtocol = function(longUrl) {
 
 util.getFullPath = function(shortKey) {
     if (shortKey == undefined) shortKey = '';
-    if (isProduction()) {
+    if (util.isProduction()) {
         return HOSTNAME + "/" + shortKey;
     }
     return HOSTNAME + ":" + PORT + "/" + shortKey; 
 }
 
-function isProduction() {
+util.isProduction = function() {
     return process.env.NODE_ENV == 'production';
 }

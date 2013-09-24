@@ -6,9 +6,7 @@ var querystring = require('querystring');
 var os = require('os');
 
 // Third-Party
-var databaseUrl = process.env.MONGOLAB_URI || "mydb",
-    collections = ["links"],
-    db;
+var db, databaseUrl;
 var forms = require('forms'),
     fields = forms.fields,
     validators = forms.validators;
@@ -18,30 +16,51 @@ var express = require('express'),
 
 
 // GLOBAL DB KEYS
-var HOSTNAME = exports.HOSTNAME = process.env.HOSTNAME || 'http://localhost';
-var PORT = exports.PORT = process.env.PORT || 1337;
+var HOSTNAME, PORT;
 
 var util = {};
 
 module.exports.util = util;
 
-app.get('/', index);
-app.get('/favicon.ico', function(req, res) {res.writeHead(200); res.end();});
-app.post('/create', handlePOST);
+// dev env
+app.configure('development', function() {
+    databaseUrl = 'mydb';
+    HOSTNAME = exports.HOSTNAME = 'http://localhost';
+    PORT = exports.PORT = 1337;
+});
 
-app.use(express.logger());
+// testing env
+app.configure('testing', function() {
+    databaseUrl = 'testing_db';
+    app.get('/helloworld', function(req, res) { res.send('helloworld!') }); // used by one of the tests
+    HOSTNAME = exports.HOSTNAME = 'http://localhost';
+    PORT = exports.PORT = 1337;
+});
+
+// production env
+app.configure('production', function() {
+    databaseUrl = process.env.MONGOLAB_URI;
+    HOSTNAME = exports.HOSTNAME = process.env.HOSTNAME;
+    PORT = exports.PORT = process.env.PORT;
+});
+
+// all environments
+app.configure(function() {
+    // handles static files in ./public files
+    app.use('/static', express.static(__dirname + '/public')); 
+
+    app.get('/', index);
+    app.get('/favicon.ico', function(req, res) {res.send(200);});
+    app.get('/*', handleGET);
+    app.post('/create', handlePOST);
+});
 
 startServer();
 
 function startServer() {
-    if(process.env.NODE_ENV == 'testing') {
-        databaseUrl = 'testing_db';
-        app.get('/helloworld', function(req, res) { res.writeHead(200, {'Content-Type': 'text/html'}); res.end('helloworld!') });
-    }
-    db = require("mongojs").connect(databaseUrl, collections);
-    app.get('/*', handleGET);
+    db = require("mongojs").connect(databaseUrl, ['links']);
     app.listen(PORT);
-    console.log('Server running at http://' + HOSTNAME + ':' + PORT + "/");
+    console.log(process.env.NODE_ENV + ' server running at http://' + HOSTNAME + ':' + PORT + "/");
 }
 
 function handleGET(req, res) {
@@ -59,9 +78,7 @@ function index(req, res) {
         long: fields.string({required: true, label: 'Enter a long URL to shorten:'}),
         short: fields.string({required: false, label: 'Custom url (optional):'}) 
     });
-    res.writeHead(200, {'Content-Type': 'text/html'});
-    res.write('<h1>Shorten Long Url</h1>');
-    res.end(
+    res.send('<h1>Shorten Long Url</h1>' +
         '<form action="/create" method="post">' + 
         create_form.toHTML() +
         '<input type="submit" value="Shorten"/>' +
@@ -144,11 +161,9 @@ function createNewShortUrl(res, params) {
 function renderShortenUrlCreated(res, params) {
     var longUrl = params.long;
     var shortKey = params.short;
-    res.writeHead(200, {'Content-Type': 'text/html'});
-    res.write('<h1>Shorten URL Created!</h1>');
-    res.write('<b>' + util.getFullPath(shortKey) + '</b> now takes you to <b>' + longUrl + '</b></br>');
-    res.write('Try now: ' + '<a href="' + util.getFullPath(shortKey) + '">'+ util.getFullPath(shortKey) + "</a>");
-    return res.end();
+    res.send('<h1>Shorten URL Created!</h1>'+
+        '<b>' + util.getFullPath(shortKey) + '</b> now takes you to <b>' + longUrl + '</b></br>' +
+        'Try now: ' + '<a href="' + util.getFullPath(shortKey) + '">'+ util.getFullPath(shortKey) + "</a>");
 }
 
 function handleValidPaths(req, res) {
@@ -182,20 +197,18 @@ util.getShortKey = function(pathUrl) {
 
 function send302Response(res, forwardUrl) {
     console.log("FORWARD: " + forwardUrl);
-    res.writeHead(302, {'Location': forwardUrl});
-    res.end();
-    return res;
+    res.set({'Location': forwardUrl});
+    res.send(302);
 }
 
 function sendErrorResponse(res, msg) {
-    res.writeHead(400,  {'Content-Type': 'text/html'});
     if (msg)
         msg = 'Error: ' + msg;
     else
         msg = 'Error';
-    res.write(msg + "</br>");
+    msg = msg + "</br><a href='" + util.getFullPath() + "'>Go to Home Page</a>";
+    res.send(400, msg);
     console.log("send error: " + msg);
-    res.end("<a href='" + util.getFullPath() + "'>Go to Home Page</a>");
 }
 
 util.addHttpToUrlIfMissingProtocol = function(longUrl) {

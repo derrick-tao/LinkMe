@@ -47,10 +47,7 @@ app.configure('production', function() {
 // all environments
 app.configure(function() {
     // handles static files in ./public files
-    app.use(function(req, res, next) {
-        console.log("Request Ip: " + req.ip + " Request Method: " + req.method + " Url: " + req.url);
-        next();
-    });
+    app.use(express.logger());
     app.use(express.favicon(__dirname + '/public/rocket.ico'));
     app.use('/static', express.static(__dirname + '/public')); 
 

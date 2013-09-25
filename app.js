@@ -33,7 +33,6 @@ app.configure('development', function() {
 app.configure('testing', function() {
     databaseUrl = 'testing_db';
     app.get('/helloworld', function(req, res) { res.send('helloworld!') }); // used by one of the tests
-    app.get('/hi', function(req, res) { res.send('helloworld!') }); // used by one of the tests
     HOSTNAME = exports.HOSTNAME = 'http://localhost';
     PORT = exports.PORT = 1337;
 });

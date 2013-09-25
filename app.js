@@ -33,6 +33,7 @@ app.configure('development', function() {
 app.configure('testing', function() {
     databaseUrl = 'testing_db';
     app.get('/helloworld', function(req, res) { res.send('helloworld!') }); // used by one of the tests
+    app.get('/hi', function(req, res) { res.send('helloworld!') }); // used by one of the tests
     HOSTNAME = exports.HOSTNAME = 'http://localhost';
     PORT = exports.PORT = 1337;
 });
@@ -55,7 +56,8 @@ app.configure(function() {
 
     app.get('/', index);
     app.get('/favicon.ico', function(req, res) {res.send(200);});
-    app.get('/*', handleGET);
+    app.get(/^\/\w+$/, handleGET);
+    app.get('*', function(req, res) { sendErrorResponse(res, "Invalid short url") });
     app.post('/create', handlePOST);
 });
 
@@ -68,11 +70,18 @@ function startServer() {
 }
 
 function handleGET(req, res) {
-    if (util.isValidPath(req.url)) {
-        handleValidPaths(req, res);
-    } else {
-        sendErrorResponse(res, "Invalid short url");
-    }
+    var pathUrl = req.url;
+
+    var shortKey = util.getShortKey(pathUrl);
+
+    db.links.findOne({short: shortKey}, function(err, link) {
+        if (!err && link && link.long) {
+            var longUrl = util.addHttpToUrlIfMissingProtocol(link.long);
+            send302Response(res, longUrl);
+        } else {
+            sendErrorResponse(res, "No url associated with <b>" + util.getFullPath(shortKey) + "</b>");
+        }
+    });
 }
 
 function index(req, res) {
@@ -162,21 +171,6 @@ function renderShortenUrlCreated(res, params) {
     res.send('<h1>Shorten URL Created!</h1>'+
         '<b>' + util.getFullPath(shortKey) + '</b> now takes you to <b>' + longUrl + '</b></br>' +
         'Try now: ' + '<a href="' + util.getFullPath(shortKey) + '">'+ util.getFullPath(shortKey) + "</a>");
-}
-
-function handleValidPaths(req, res) {
-    var pathUrl = req.url;
-
-    var shortKey = util.getShortKey(pathUrl);
-
-    db.links.findOne({short: shortKey}, function(err, link) {
-        if (!err && link && link.long) {
-            var longUrl = util.addHttpToUrlIfMissingProtocol(link.long);
-            send302Response(res, longUrl);
-        } else {
-            sendErrorResponse(res, "No url associated with <b>" + util.getFullPath(shortKey) + "</b>");
-        }
-    });
 }
 
 util.isValidPath = function(pathName) {

@@ -76,7 +76,7 @@ function handleGET(req, res) {
     db.links.findOne({short: shortKey}, function(err, link) {
         if (!err && link && link.long) {
             var longUrl = util.addHttpToUrlIfMissingProtocol(link.long);
-            send302Response(res, longUrl);
+            sendRedirect(res, longUrl);
         } else {
             sendErrorResponse(res, "No url associated with <b>" + util.getFullPath(shortKey) + "</b>");
         }
@@ -182,10 +182,9 @@ util.getShortKey = function(pathUrl) {
     return parsedUrl.pathname.substring(1);
 }
 
-function send302Response(res, forwardUrl) {
+function sendRedirect(res, forwardUrl) {
     console.log("FORWARD: " + forwardUrl);
-    res.set({'Location': forwardUrl});
-    res.send(302);
+    res.redirect(forwardUrl);
 }
 
 function sendErrorResponse(res, msg) {

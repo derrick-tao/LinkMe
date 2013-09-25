@@ -42,20 +42,36 @@ app.configure('production', function() {
     databaseUrl = process.env.MONGOLAB_URI;
     HOSTNAME = exports.HOSTNAME = process.env.HOSTNAME;
     PORT = exports.PORT = process.env.PORT;
+    app.set('src_angular_js', '//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js');
 });
 
 // all environments
 app.configure(function() {
-    // handles static files in ./public files
+    // log all routes
     app.use(express.logger());
-    app.use(express.favicon(__dirname + '/public/rocket.ico'));
-    app.use('/static', express.static(__dirname + '/public')); 
 
+    // favicon
+    app.use(express.favicon(__dirname + '/public/rocket.ico'));
+
+    // configure views
+    app.set("views", __dirname + "/views"); 
+    app.engine('html', require('ejs').renderFile);
+
+    // handles static files in ./public files
+    app.use('/static', express.static(__dirname + '/public')); 
+    app.use('/static', express.static(__dirname + '/bower_components/')); 
+
+    // app routes
     app.get('/', index);
     app.get('/favicon.ico', function(req, res) {res.send(200);});
     app.get(/^\/\w+$/, handleGET);
     app.get('*', function(req, res) { sendErrorResponse(res, "Invalid short url") });
     app.post('/create', handlePOST);
+
+    app.locals({
+        title: 'Shorten Long Url',
+        src_angular_js: app.get('js_src') || '/static/angular/angular.js'
+    });
 });
 
 startServer();
@@ -82,15 +98,16 @@ function handleGET(req, res) {
 }
 
 function index(req, res) {
-    var create_form = forms.create({
-        long: fields.string({required: true, label: 'Enter a long URL to shorten:'}),
-        short: fields.string({required: false, label: 'Custom url (optional):'}) 
-    });
-    res.send('<h1>Shorten Long Url</h1>' +
-        '<form action="/create" method="post">' + 
-        create_form.toHTML() +
-        '<input type="submit" value="Shorten"/>' +
-        '</form>');
+    res.render('index.html.ejs', {message : 'hello'});
+    // var create_form = forms.create({
+    //     long: fields.string({required: true, label: 'Enter a long URL to shorten:'}),
+    //     short: fields.string({required: false, label: 'Custom url (optional):'}) 
+    // });
+    // res.send('<h1>Shorten Long Url</h1>' +
+    //     '<form action="/create" method="post">' + 
+    //     create_form.toHTML() +
+    //     '<input type="submit" value="Shorten"/>' +
+    //     '</form>');
 }
 
 function handlePOST(req, res) {
@@ -99,7 +116,8 @@ function handlePOST(req, res) {
         body += data;
     });
     req.on('end', function() {
-        var params = querystring.parse(body);
+        console.log(body);
+        var params = JSON.parse(body);
         var longUrl = params.long;
         var shortKey = params.short;
         console.log("shortkey: " + shortKey + " longUrl: " + longUrl);

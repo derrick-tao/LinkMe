@@ -47,6 +47,10 @@ app.configure('production', function() {
 // all environments
 app.configure(function() {
     // handles static files in ./public files
+    app.use(function(req, res, next) {
+        console.log("Request Method: " + req.method + " Url: " + req.url);
+        next();
+    });
     app.use('/static', express.static(__dirname + '/public')); 
 
     app.get('/', index);
@@ -64,7 +68,6 @@ function startServer() {
 }
 
 function handleGET(req, res) {
-    console.log("Received GET req: " + req.url);
     if (util.isValidPath(req.url)) {
         handleValidPaths(req, res);
     } else {
@@ -73,7 +76,6 @@ function handleGET(req, res) {
 }
 
 function index(req, res) {
-    console.log('Get Request for Index');
     var create_form = forms.create({
         long: fields.string({required: true, label: 'Enter a long URL to shorten:'}),
         short: fields.string({required: false, label: 'Custom url (optional):'}) 
@@ -86,7 +88,6 @@ function index(req, res) {
 }
 
 function handlePOST(req, res) {
-    console.log("Received Post");
     var body = "";
     req.on('data', function(data) {
         body += data;
@@ -95,12 +96,9 @@ function handlePOST(req, res) {
         var params = querystring.parse(body);
         var longUrl = params.long;
         var shortKey = params.short;
-        console.log("shortkey: " + shortKey);
-        switch(longUrl) {
-            case undefined:
-            case '':
+        console.log("shortkey: " + shortKey + " longUrl: " + longUrl);
+        if (longUrl == undefined || longUrl == '')
             return sendErrorResponse(res, "Blank Long Url is not valid");
-        }
         switch(shortKey) {
             case undefined: return sendErrorResponse(res, "Error has occured");
 
@@ -167,13 +165,9 @@ function renderShortenUrlCreated(res, params) {
 }
 
 function handleValidPaths(req, res) {
-    console.log('Received Get');
-
     var pathUrl = req.url;
-    console.log('Get Pathname: ' + pathUrl);
 
     var shortKey = util.getShortKey(pathUrl);
-    console.log('ShortKey: ' + shortKey);
 
     db.links.findOne({short: shortKey}, function(err, link) {
         if (!err && link && link.long) {

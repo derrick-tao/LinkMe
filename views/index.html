@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title><%= title %></title>
+    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.0.8/angular.min.js"></script>
+    <script type="text/javascript" src='/static/angular-bootstrap/ui-bootstrap-tpls.min.js'></script>
+    <script type="text/javascript" src='/static/js/index.js'></script>
+    <link href='//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css' rel="stylesheet"/>
+    <link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
+    <link href='/static/css/index.css' rel="stylesheet"/>
+</head>
+<body ng-app="myApp">
+    <div id="wrap">
+        <div class="container">
+
+            <div class="page-header">
+                <h1><i class="icon-rocket"></i>Shorten Long Url</h1>
+            </div>
+            <p class="lead">
+                By entering in a URL in the text field below, we will create a shorten URL that you can use instead.
+            </p>
+
+            <div ng-view></div>
+
+        </div>
+
+
+    </div>
+
+    <div id="footer">
+      <div class="container">
+        <p class="text-muted credit">Made by <a href="http://twitter.com/derrick_demo">Derrick Tao</a>.</p>
+    </div>
+</div> 
+</body>
+</html>

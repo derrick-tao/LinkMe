@@ -42,7 +42,6 @@ app.configure('production', function() {
     databaseUrl = process.env.MONGOLAB_URI;
     HOSTNAME = exports.HOSTNAME = process.env.HOSTNAME;
     PORT = exports.PORT = process.env.PORT;
-    app.set('src_angular_js', '//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js');
 });
 
 // all environments
@@ -51,7 +50,7 @@ app.configure(function() {
     app.use(express.logger());
 
     // favicon
-    app.use(express.favicon(__dirname + '/public/rocket.ico'));
+    app.use(express.favicon(__dirname + '/public/img/icon-rocket.png'));
 
     // configure views
     app.set("views", __dirname + "/views"); 
@@ -70,7 +69,6 @@ app.configure(function() {
 
     app.locals({
         title: 'Shorten Long Url',
-        src_angular_js: app.get('js_src') || '/static/angular/angular.js'
     });
 });
 
@@ -98,7 +96,7 @@ function handleGET(req, res) {
 }
 
 function index(req, res) {
-    res.render('index.html.ejs', {message : 'hello'});
+    res.render('index.html', {message : 'hello'});
     // var create_form = forms.create({
     //     long: fields.string({required: true, label: 'Enter a long URL to shorten:'}),
     //     short: fields.string({required: false, label: 'Custom url (optional):'}) 
@@ -182,10 +180,11 @@ function createNewShortUrl(res, params) {
 
 function renderShortenUrlCreated(res, params) {
     var longUrl = params.long;
-    var shortKey = params.short;
-    res.send('<h1>Shorten URL Created!</h1>'+
-        '<b>' + util.getFullPath(shortKey) + '</b> now takes you to <b>' + longUrl + '</b></br>' +
-        'Try now: ' + '<a href="' + util.getFullPath(shortKey) + '">'+ util.getFullPath(shortKey) + "</a>");
+    var shortenUrl = params.short;
+    res.send({longUrl: params.long, shortUrl: util.getFullPath(params.short)});
+    // res.send('<h1>Shorten URL Created!</h1>'+
+    //     '<b>' + util.getFullPath(shortKey) + '</b> now takes you to <b>' + longUrl + '</b></br>' +
+    //     'Try now: ' + '<a href="' + util.getFullPath(shortKey) + '">'+ util.getFullPath(shortKey) + "</a>");
 }
 
 util.isValidPath = function(pathName) {

@@ -42,6 +42,7 @@ app.configure('production', function() {
     databaseUrl = process.env.MONGOLAB_URI;
     HOSTNAME = exports.HOSTNAME = process.env.HOSTNAME;
     PORT = exports.PORT = process.env.PORT;
+    app.set('useMin', true);
 });
 
 // all environments
@@ -69,6 +70,7 @@ app.configure(function() {
 
     app.locals({
         title: 'Shorten Long Url',
+        useMin: (app.get('useMin') ? '.min' : '')
     });
 });
 

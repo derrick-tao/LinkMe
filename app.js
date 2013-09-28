@@ -2,14 +2,9 @@
 
 var http = require('http');
 var url = require('url');
-var querystring = require('querystring');
-var os = require('os');
 
 // Third-Party
 var db, databaseUrl;
-var forms = require('forms'),
-    fields = forms.fields,
-    validators = forms.validators;
 var random = require("randomstring");
 var express = require('express'),
     app = express();
@@ -98,16 +93,7 @@ function handleGET(req, res) {
 }
 
 function index(req, res) {
-    res.render('index.html', {message : 'hello'});
-    // var create_form = forms.create({
-    //     long: fields.string({required: true, label: 'Enter a long URL to shorten:'}),
-    //     short: fields.string({required: false, label: 'Custom url (optional):'}) 
-    // });
-    // res.send('<h1>Shorten Long Url</h1>' +
-    //     '<form action="/create" method="post">' + 
-    //     create_form.toHTML() +
-    //     '<input type="submit" value="Shorten"/>' +
-    //     '</form>');
+    res.render('index.html');
 }
 
 function handlePOST(req, res) {
@@ -184,9 +170,6 @@ function renderShortenUrlCreated(res, params) {
     var longUrl = params.long;
     var shortenUrl = params.short;
     res.send({longUrl: params.long, shortUrl: util.getFullPath(params.short)});
-    // res.send('<h1>Shorten URL Created!</h1>'+
-    //     '<b>' + util.getFullPath(shortKey) + '</b> now takes you to <b>' + longUrl + '</b></br>' +
-    //     'Try now: ' + '<a href="' + util.getFullPath(shortKey) + '">'+ util.getFullPath(shortKey) + "</a>");
 }
 
 util.isValidPath = function(pathName) {

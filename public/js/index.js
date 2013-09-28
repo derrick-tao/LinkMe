@@ -19,7 +19,7 @@ function ShortenCtrl($scope, $location, $http, $cookieStore) {
         .success(function(data, status, headers, config) {
             $cookieStore.put('longUrl', data.longUrl);
             $cookieStore.put('shortUrl', data.shortUrl);
-            $location.path('/create');
+            $location.path('/create').search({a: 'b', c: true});
         }).error(function(data, status, headers, config) {
             console.log(data);
         });

@@ -1,4 +1,4 @@
 <div class="alert alert-success" ng-controller="ShortenCtrl">
-    <strong>Success!</strong> This URL <a class="alert-link" href='{{getShortUrl()}}'>{{getShortUrl()}}</a> will now take you to <em>{{getLongUrl()}}</em> !
+    <span class="label label-success">Success!</span> This URL <a href="{{getShortUrl()}}" class="alert-link" target="_self">{{getShortUrl()}}</a> will now take you to <em>{{getLongUrl()}}</em> !
 </div>
 <button class="btn btn-default" ng-click="goHome()">Make Another!</button>

@@ -58,6 +58,7 @@ app.configure(function() {
 
     // app routes
     app.get('/', index);
+    app.get('/create', create);
     app.get('/favicon.ico', function(req, res) {res.send(200);});
     app.get(/^\/\w+$/, handleGET);
     app.get('*', function(req, res) { sendErrorResponse(res, "Invalid short url") });
@@ -93,6 +94,10 @@ function handleGET(req, res) {
 }
 
 function index(req, res) {
+    res.render('index.html');
+}
+
+function create(req, res) {
     res.render('index.html');
 }
 

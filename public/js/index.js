@@ -1,9 +1,12 @@
 var myApp = angular.module('myApp', ['ui.bootstrap', 'ngCookies']).
-                config(['$routeProvider', function($routeProvider) {
+                config(['$routeProvider', '$locationProvider', function($routeProvider, $locationProvider) {
                     $routeProvider.
                         when('/', {controller: ShortenCtrl, templateUrl: 'static/partials/shortenForm.html'}).
                         when('/create', {controller: CreateCtrl, templateUrl: 'static/partials/newShortenUrl.html'});
+
+                    $locationProvider.html5Mode(true).hashPrefix('!');
                 }]);
+
 
 function ShortenCtrl($scope, $location, $http, $cookieStore) {
 

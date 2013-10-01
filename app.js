@@ -54,11 +54,10 @@ app.configure(function() {
 
     // handles static files in ./public files
     app.use('/static', express.static(__dirname + '/public')); 
-    app.use('/static', express.static(__dirname + '/bower_components/')); 
+    app.use('/static', express.static(__dirname + '/bower_components')); 
 
     // app routes
     app.get('/', index);
-    app.get('/create', create);
     app.get('/favicon.ico', function(req, res) {res.send(200);});
     app.get(/^\/\w+$/, handleGET);
     app.get('*', function(req, res) { sendErrorResponse(res, "Invalid short url") });
@@ -88,16 +87,12 @@ function handleGET(req, res) {
             var longUrl = util.addHttpToUrlIfMissingProtocol(link.long);
             sendRedirect(res, longUrl);
         } else {
-            sendErrorResponse(res, "No url associated with <b>" + util.getFullPath(shortKey) + "</b>");
+            index(req, res);
         }
     });
 }
 
 function index(req, res) {
-    res.render('index.html');
-}
-
-function create(req, res) {
     res.render('index.html');
 }
 
@@ -151,7 +146,7 @@ function handleShortKeyLookup(res, params) {
     var shortKey = params.short;
     db.links.findOne({short: shortKey}, function(err, link) {
         if (!err && link && link.long) {
-            return sendErrorResponse(res, "Custom url <b>" + util.getFullPath(shortKey) + "</b> already exists.");
+            return sendErrorResponse(res, "Custom url " + util.getFullPath(shortKey) + " already taken.");
         } else {
             return createNewShortUrl(res, params);
         }
@@ -192,13 +187,14 @@ function sendRedirect(res, forwardUrl) {
     res.redirect(forwardUrl);
 }
 
-function sendErrorResponse(res, msg) {
-    if (msg)
-        msg = 'Error: ' + msg;
-    else
-        msg = 'Error';
-    msg = msg + "</br><a href='" + util.getFullPath() + "'>Go to Home Page</a>";
-    res.send(400, msg);
+function sendErrorResponse(res, msg, errorType) {
+    var data = {
+        error: {
+            type: errorType || 'error',
+            errorText: msg
+        }
+    }
+    res.send(200, data);
     console.log("send error: " + msg);
 }
 

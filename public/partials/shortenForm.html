@@ -2,21 +2,26 @@
     By entering in a URL in the text field below, we will create a shorten URL that you can use instead.
 </p>
 <form class="form-horizontal" role="form" ng-submit="submitForm()" ng-controller="ShortenCtrl">
+    <div class="alert alert-{{form.alert.type}}" ng-show="form.alert.type">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true" ng-click="removeAlert()">&times;</button>
+        <strong>Error</strong> {{form.alert.errorText}}
+    </div>
     <div class="form-group">
         <label for="inputLongUrl" class="col-lg-2 control-label">Long URL</label>
         <div class="col-lg-10">
             <input type="text" class="form-control" id="inputLongUrl" placeholder="Long URL" required ng-model="longUrl">
         </div>
     </div>
-    <div class="form-group">
+    <div class="form-group has-{{form.shortUrl.type}}">
         <label for="inputShortUrl" class="col-lg-2 control-label">Short Url</label>
         <div class="col-lg-10">
-            <input type="text" class="form-control" id="inputShortUrl" placeholder="Optional" ng-model="shortUrl">
+            <input type="text" class="form-control" id="inputShortUrl" placeholder="Optional" ng-model="shortUrl" ng-change="removeErrorTextIfAny()">
+            <span class="help-block" ng-show="form.shortUrl.errorText">{{form.shortUrl.errorText}}</span>
         </div>
     </div>
     <div class="form-group">
         <div class="col-lg-offset-2 col-lg-10">
-            <button type="submit" class="btn btn-primary"><i class="icon-external-link"></i>Shorten</button>
+            <button type="submit" class="btn btn-primary" ng-disabled="form.shortUrl.errorText"><i class="icon-external-link"></i>Shorten</button>
         </div>
     </div>
 </form> 

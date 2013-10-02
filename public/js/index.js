@@ -5,8 +5,13 @@ var myApp = angular.module('myApp', ['ui.bootstrap', 'ngCookies']).
                         when('/create', {controller: CreateCtrl, templateUrl: 'static/partials/newShortenUrl.html'}).
                         otherwise({templateUrl: 'static/partials/NoUrlExists.html'})
                     $locationProvider.html5Mode(true).hashPrefix('!');
-                }]);
+                }]).
 
+                filter('reverseAndDropFirst', function() {
+                    return function(items) {
+                        return items.slice().reverse().slice(1);
+                    };
+                });
 
 function ShortenCtrl($scope, $location, $http, $cookieStore) {
 
@@ -31,24 +36,25 @@ function ShortenCtrl($scope, $location, $http, $cookieStore) {
         $http.post('/create', formData)
         .success(function(data, status, headers, config) {
             console.log(data);
-            if (data.error) {
-                $scope.form.shortUrl.type = data.error.type;
-                $scope.form.shortUrl.errorText = data.error.errorText;
-            } else {
-                $cookieStore.put('longUrl', data.longUrl);
-                $cookieStore.put('shortUrl', data.shortUrl);
-                $location.path('/create');
+            var urls = [];
+            if($cookieStore.get('urls')) {
+                urls = $cookieStore.get('urls');
             }
+            urls.push({longUrl: data.longUrl, shortUrl: data.shortUrl});
+            // $cookieStore.put('longUrl', data.longUrl);
+            // $cookieStore.put('shortUrl', data.shortUrl);
+            $cookieStore.put('urls', urls);
+            $location.path('/create');
         }).error(function(data, status, headers, config) {
-            $scope.form.alert.type = 'danger';
-            $scope.form.alert.errorText = data;
+            console.log($cookieStore.get('urls'));
+            $scope.form.shortUrl.type = data.error.type;
+            $scope.form.shortUrl.errorText = data.error.errorText;
         });
     }
 
     $scope.goHome = function() {
         return $location.path('/');
     }
-
     $scope.removeErrorTextIfAny = function() {
         $scope.form.shortUrl.type = '';
         $scope.form.shortUrl.errorText = '';
@@ -62,12 +68,14 @@ function ShortenCtrl($scope, $location, $http, $cookieStore) {
 
 function CreateCtrl($scope, $location, $cookieStore) {
 
-    if(! ($cookieStore.get('longUrl') && $cookieStore.get('shortUrl'))) {
+    $scope.urls = $cookieStore.get('urls');
+
+    if(! $scope.urls || $scope.urls.length == 0) {
         $location.path('/');
     }
 
     $scope.isValid = function() {
-        return ($cookieStore.get('longUrl') && $cookieStore.get('shortUrl'));
+        return $scope.urls;
     }
 
     $scope.goHome = function() {
@@ -75,11 +83,11 @@ function CreateCtrl($scope, $location, $cookieStore) {
     }
 
     $scope.getLongUrl = function() {
-        return $cookieStore.get('longUrl');
+        return $scope.urls[$scope.urls.length - 1].longUrl;
     }
 
     $scope.getShortUrl = function() {
-        return $cookieStore.get('shortUrl');
+        return $scope.urls[$scope.urls.length - 1].shortUrl;
     }
 
     $scope.goToShortUrl = function() {

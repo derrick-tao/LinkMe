@@ -17,31 +17,11 @@ var util = {};
 
 module.exports.util = util;
 
-// dev env
-app.configure('development', function() {
-    databaseUrl = 'mydb';
-    HOSTNAME = exports.HOSTNAME = 'http://localhost';
-    PORT = exports.PORT = 1337;
-});
-
-// testing env
-app.configure('testing', function() {
-    databaseUrl = 'testing_db';
-    app.get('/helloworld', function(req, res) { res.send('helloworld!') }); // used by one of the tests
-    HOSTNAME = exports.HOSTNAME = 'http://localhost';
-    PORT = exports.PORT = 1337;
-});
-
-// production env
-app.configure('production', function() {
-    databaseUrl = process.env.MONGOLAB_URI;
-    HOSTNAME = exports.HOSTNAME = process.env.HOSTNAME;
-    PORT = exports.PORT = process.env.PORT;
-    app.set('useMin', true);
-});
-
 // all environments
 app.configure(function() {
+    HOSTNAME = exports.HOSTNAME = 'http://localhost';
+    PORT = exports.PORT = 1337;
+    databaseUrl = 'mydb';
     // log all routes
     app.use(express.logger());
 
@@ -65,8 +45,26 @@ app.configure(function() {
 
     app.locals({
         title: 'Shorten Long Url',
-        useMin: (app.get('useMin') ? '.min' : '')
+        useMin: ''
     });
+});
+
+// dev env
+app.configure('development', function() {
+});
+
+// testing env
+app.configure('testing', function() {
+    databaseUrl = 'testing_db';
+    app.get('/helloworld', function(req, res) { res.send('helloworld!') }); // used by one of the tests
+});
+
+// production env
+app.configure('production', function() {
+    databaseUrl = process.env.MONGOLAB_URI;
+    HOSTNAME = exports.HOSTNAME = process.env.HOSTNAME;
+    PORT = exports.PORT = process.env.PORT;
+    app.locals.useMin = '.min';
 });
 
 startServer();
@@ -194,7 +192,7 @@ function sendErrorResponse(res, msg, errorType) {
             errorText: msg
         }
     }
-    res.send(200, data);
+    res.send(400, data);
     console.log("send error: " + msg);
 }
 

@@ -2,5 +2,11 @@
     <div class="alert alert-success" ng-controller="ShortenCtrl">
         <span class="label label-success">Success!</span> This URL <a href="{{getShortUrl()}}" class="alert-link" target="_self">{{getShortUrl()}}</a> will now take you to <em>{{getLongUrl()}}</em> !
     </div>
+    <ul class="list-group">
+        <li class="list-group-item" ng-repeat="url in urls | reverseAndDropFirst">
+            <i class="icon-external-link"></i><a href="{{url.shortUrl}}" target="_self">{{url.shortUrl}}</a>
+            <p>{{url.longUrl}}</p>
+        </li>
+    </ul>
     <button class="btn btn-default" ng-click="goHome()">Make Another!</button>
 </div>

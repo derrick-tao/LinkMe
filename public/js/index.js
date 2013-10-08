@@ -1,4 +1,4 @@
-var myApp = angular.module('myApp', ['ui.bootstrap', 'ngCookies']).
+var myApp = angular.module('myApp', ['ngCookies']).
                 config(['$routeProvider', '$locationProvider', function($routeProvider, $locationProvider) {
                     $routeProvider.
                         when('/', {controller: ShortenCtrl, templateUrl: 'static/partials/shortenForm.html'}).
@@ -49,12 +49,15 @@ function ShortenCtrl($scope, $location, $http, $cookieStore) {
             console.log($cookieStore.get('urls'));
             $scope.form.shortUrl.type = data.error.type;
             $scope.form.shortUrl.errorText = data.error.errorText;
+            $scope.form.alert.type = 'danger';
+            $scope.form.alert.errorText = 'uh oh';
         });
     }
 
     $scope.goHome = function() {
         return $location.path('/');
     }
+    
     $scope.removeErrorTextIfAny = function() {
         $scope.form.shortUrl.type = '';
         $scope.form.shortUrl.errorText = '';
